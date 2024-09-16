@@ -6,6 +6,7 @@ namespace Models
     {
         private DateTime dateTime;
 
+        //[ConcurrencyCheck]
         public DateTime DateTime
         {
             get => dateTime;
