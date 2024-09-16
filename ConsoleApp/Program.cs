@@ -5,7 +5,7 @@ using Models;
 var configurationOptions = new DbContextOptionsBuilder<Context>()
     .UseSqlServer(@"Server=(local);Database=EfCore;Integrated security=true;TrustServerCertificate=true")
     //.LogTo(Console.WriteLine)
-    .UseChangeTrackingProxies()
+    //.UseChangeTrackingProxies()
     .Options;
 
 
@@ -24,8 +24,8 @@ using (var context = new Context(configurationOptions))
     Console.WriteLine("Order przed dodaniem do kontekstu: " + context.Entry(order).State);
     Console.WriteLine("Product przed dodaniem do kontekstu: " + context.Entry(product).State);
 
-    order = context.CreateProxy<Order>();
-    product = context.CreateProxy<Product>(x => { x.Price = product.Price; x.Name = product.Name; });
+    //order = context.CreateProxy<Order>();
+    //product = context.CreateProxy<Product>(x => { x.Price = product.Price; x.Name = product.Name; });
     order.Products.Add(product);
 
     //context.Attach(order);
@@ -119,3 +119,13 @@ using (var context = new Context(configurationOptions))
     Console.WriteLine(context.ChangeTracker.DebugView.LongView);
 }
 
+
+using (var context = new Context(configurationOptions))
+{
+    //AsNoTracking pomija context przy pobieraniu danych
+    context.Set<Product>().AsNoTracking().ToList();
+    Console.WriteLine("----");
+    Console.WriteLine(context.ChangeTracker.DebugView.LongView);
+
+
+}
