@@ -5,6 +5,7 @@ using Models;
 var configurationOptions = new DbContextOptionsBuilder<Context>()
     .UseSqlServer(@"Server=(local);Database=EfCore;Integrated security=true;TrustServerCertificate=true")
     //.LogTo(Console.WriteLine)
+    .UseChangeTrackingProxies()
     .Options;
 
 
@@ -18,8 +19,14 @@ using (var context = new Context(configurationOptions))
     context.Database.EnsureDeleted();
     context.Database.EnsureCreated();
 
+    context.ChangeTracker.AutoDetectChangesEnabled = false;
+
     Console.WriteLine("Order przed dodaniem do kontekstu: " + context.Entry(order).State);
     Console.WriteLine("Product przed dodaniem do kontekstu: " + context.Entry(product).State);
+
+    order = context.CreateProxy<Order>();
+    product = context.CreateProxy<Product>(x => { x.Price = product.Price; x.Name = product.Name; });
+    order.Products.Add(product);
 
     //context.Attach(order);
     context.Add(order);
@@ -34,6 +41,9 @@ using (var context = new Context(configurationOptions))
 
     order.DateTime = DateTime.Now;
 
+    
+    Console.WriteLine(context.ChangeTracker.DebugView.LongView);
+
     Console.WriteLine("Order po zmianie daty: " + context.Entry(order).State);
     Console.WriteLine("Order DateTime po zmianie daty: " + context.Entry(order).Property(x => x.DateTime).IsModified);
     Console.WriteLine("Order Products po zmianie daty: " + context.Entry(order).Collection(x => x.Products).IsModified);
@@ -47,8 +57,11 @@ using (var context = new Context(configurationOptions))
     Console.WriteLine("Order po zapisie: " + context.Entry(order).State);
     Console.WriteLine("Product po zapisie: " + context.Entry(product).State);
 
+    //context.ChangeTracker.Clear();
     product.Id = 0;
-    context.Attach(product);
+    //product.Order = new Order() { Id = 1};
+    context.Add(product);
+    //context.Entry(product.Order).State = EntityState.Unchanged;
 
     Console.WriteLine("Order Products po dodaniu: " + context.Entry(order).Collection(x => x.Products).IsModified);
     Console.WriteLine("Product po dodaniu: " + context.Entry(product).State);
