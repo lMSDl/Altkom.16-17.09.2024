@@ -1,5 +1,6 @@
 ﻿using DAL;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Models;
 
 var configurationOptions = new DbContextOptionsBuilder<Context>()
@@ -15,12 +16,38 @@ using (var context = new Context(configurationOptions))
     context.Database.EnsureCreated();
 }
 
+using (var context = new Context(configurationOptions))
+{
+    for (int i = 0; i < 17; i++)
+    {
+        var order = new Order();
+        order.DateTime = DateTime.Now;
+        var orderProduct = new Product { Name = "P" + i, Price = 1 + i };
+        order.Products.Add(orderProduct);
+
+        context.Add(order);
+    }
+
+    context.SaveChanges();
+
+    context.ChangeTracker.Clear();
+
+    var product = context.Set<Product>().Skip(5).First();
+    var orderId = context.Entry(product).Property<int>("OrderId").CurrentValue;
+    orderId = context.Set<Product>().Skip(4).Select(x => EF.Property<int>(x, "OrderId")).First();
+
+    context.Entry(product).Property("OrderId").CurrentValue = 5;
+    context.SaveChanges();
+
+    var products = context.Set<Product>().Where(x => EF.Property<int>(x, "OrderId") == 5).ToList();
+
+}
 
 
 
 
 
-static void ChangeTracker(DbContextOptions<Context> configurationOptions)
+    static void ChangeTracker(DbContextOptions<Context> configurationOptions)
 {
     var order = new Order();
     var product = new Product() { Name = "marchewka", Price = 15 };
