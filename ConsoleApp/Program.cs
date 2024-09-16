@@ -41,7 +41,23 @@ using (var context = new Context(configurationOptions))
 
     var products = context.Set<Product>().Where(x => EF.Property<int>(x, "OrderId") == 5).ToList();
 
+    //product.IsDeleted = true;
+    context.Entry(product).Property<bool>("IsDeleted").CurrentValue = true;
+    context.SaveChanges();
+
+    context.ChangeTracker.Clear();
+
+
+    products = context.Set<Product>().ToList();
+
+    var orders = context.Set<Order>().Include(x => x.Products).ToList();
+
+    orders = context.Set<Order>().IgnoreQueryFilters().Include(x => x.Products).ToList();
+
 }
+
+
+
 
 
 

@@ -9,10 +9,12 @@ using System.Threading.Tasks;
 
 namespace DAL.Configurations
 {
-    internal class ProductConfiguration : IEntityTypeConfiguration<Product>
+    internal class ProductConfiguration : EntityConfiguration<Product>
     {
-        public void Configure(EntityTypeBuilder<Product> builder)
+        public override void Configure(EntityTypeBuilder<Product> builder)
         {
+            base.Configure(builder);
+
             builder.HasOne(x => x.Order).WithMany(x => x.Products).IsRequired();
             builder
                 //konfiguracja shadow property
