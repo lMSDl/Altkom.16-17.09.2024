@@ -16,49 +16,51 @@ using (var context = new Context(configurationOptions))
     context.Database.EnsureCreated();
 }
 
+
 using (var context = new Context(configurationOptions))
 {
-    for (int i = 0; i < 17; i++)
+    context.RandomFail = true;
+    var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x}).ToList();
+    var orders = Enumerable.Range(0, 5).Select(x => new Order { DateTime = DateTime.Now.AddMinutes(-1.23f * x) }).ToList();
+
+    using (var transaction = context.Database.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted))
     {
-        var order = new Order();
-        order.DateTime = DateTime.Now;
-        var orderProduct = new Product { Name = "P" + i, Price = 1 + i };
-        order.Products.Add(orderProduct);
 
-        context.Add(order);
-    }
+        for(int i = 0; i < orders.Count; i++)
+        {
+            string savepoint = i.ToString();
+            try
+            {
+                transaction.CreateSavepoint(savepoint);
 
-    context.SaveChanges();
+                var subproducts = products.Skip(i * 10).Take(10).ToList();
 
-    context.ChangeTracker.Clear();
+                foreach (var prodcut in subproducts)
+                {
+                    context.Add(prodcut);
 
-    var product = context.Set<Product>().Skip(5).First();
-    var orderId = context.Entry(product).Property<int>("OrderId").CurrentValue;
-    orderId = context.Set<Product>().Skip(4).Select(x => EF.Property<int>(x, "OrderId")).First();
+                    context.SaveChanges();
+                }
 
-    context.Entry(product).Property("OrderId").CurrentValue = 5;
-    context.SaveChanges();
+                var order = orders[i];
+                order.Products = subproducts;
+                context.Add(order);
 
-    var products = context.Set<Product>().Where(x => EF.Property<int>(x, "OrderId") == 5).ToList();
+                context.SaveChanges();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(context.ChangeTracker.DebugView.ShortView);
+                transaction.RollbackToSavepoint(savepoint);
+                context.ChangeTracker.Clear();
+                Console.WriteLine(context.ChangeTracker.DebugView.ShortView);
+            }
+        }
 
-    //product.IsDeleted = true;
-    context.Entry(product).Property<bool>("IsDeleted").CurrentValue = true;
-    context.SaveChanges();
-
-    context.ChangeTracker.Clear();
-
-
-    products = context.Set<Product>().ToList();
-
-    var orders = context.Set<Order>().Include(x => x.Products).ToList();
-
-    orders = context.Set<Order>().IgnoreQueryFilters().Include(x => x.Products).ToList();
+        transaction.Commit();
+    } 
 
 }
-
-
-
-
 
 
 
@@ -242,5 +244,48 @@ static void ConcurrencyCheck(DbContextOptions<Context> configurationOptions)
 
             }
         }
+    }
+}
+
+static void SHadowProperty_QueryFiters(DbContextOptions<Context> configurationOptions)
+{
+    using (var context = new Context(configurationOptions))
+    {
+        for (int i = 0; i < 17; i++)
+        {
+            var order = new Order();
+            order.DateTime = DateTime.Now;
+            var orderProduct = new Product { Name = "P" + i, Price = 1 + i };
+            order.Products.Add(orderProduct);
+
+            context.Add(order);
+        }
+
+        context.SaveChanges();
+
+        context.ChangeTracker.Clear();
+
+        var product = context.Set<Product>().Skip(5).First();
+        var orderId = context.Entry(product).Property<int>("OrderId").CurrentValue;
+        orderId = context.Set<Product>().Skip(4).Select(x => EF.Property<int>(x, "OrderId")).First();
+
+        context.Entry(product).Property("OrderId").CurrentValue = 5;
+        context.SaveChanges();
+
+        var products = context.Set<Product>().Where(x => EF.Property<int>(x, "OrderId") == 5).ToList();
+
+        //product.IsDeleted = true;
+        context.Entry(product).Property<bool>("IsDeleted").CurrentValue = true;
+        context.SaveChanges();
+
+        context.ChangeTracker.Clear();
+
+
+        products = context.Set<Product>().ToList();
+
+        var orders = context.Set<Order>().Include(x => x.Products).ToList();
+
+        orders = context.Set<Order>().IgnoreQueryFilters().Include(x => x.Products).ToList();
+
     }
 }
