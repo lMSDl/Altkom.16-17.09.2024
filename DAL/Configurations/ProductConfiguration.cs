@@ -16,10 +16,12 @@ namespace DAL.Configurations
             base.Configure(builder);
 
             builder.HasOne(x => x.Order).WithMany(x => x.Products);//.IsRequired();
-            builder
-                //konfiguracja shadow property
-                .Property<byte[]>("Timestamp")
-                .IsRowVersion();
+            //builder
+            //    //konfiguracja shadow property
+            //    .Property<byte[]>("Timestamp")
+            //    .IsRowVersion();
+
+            builder.HasOne(x => x.Details).WithOne().HasForeignKey<ProductDetails>(x => x.Id);
         }
     }
 }

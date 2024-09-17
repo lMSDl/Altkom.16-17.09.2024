@@ -26,7 +26,7 @@ using (var context = new Context(configurationOptions))
     var timer = new Stopwatch();
     timer.Reset();
     timer.Start();
-    var orders = context.Set<Order>().Include(x => x.Products).Where(x => x.DateTime > DateTime.Now.AddMinutes(-5))
+    var orders = context.Set<Order>().Include(x => x.Products).ThenInclude(x => x.Details).Where(x => x.DateTime > DateTime.Now.AddMinutes(-5))
         .Where(x => x.DateTime < DateTime.Now.AddMinutes(-1)).ToList();
     timer.Stop();
 
@@ -301,7 +301,7 @@ static void Transactions(DbContextOptions<Context> configurationOptions, bool ra
     using (var context = new Context(configurationOptions))
     {
         context.RandomFail = randomFail;
-        var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x }).ToList();
+        var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x, Details = new ProductDetails { Height = x, Width = 2 * x, Weight = 3 * x } }).ToList();
         var orders = Enumerable.Range(0, 5).Select(x => new Order { Name = x.ToString(), DateTime = DateTime.Now.AddMinutes(-1.23f * x),
             OrderType = (OrderType)(x % 3),
         Parameters = (Parameters) (x % 16)}).ToList();

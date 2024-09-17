@@ -40,5 +40,8 @@ namespace Models
         //odpowiednik IsRowVersion w konfiguracji
         //[Timestamp]
         //public byte[] Timestamp { get; } //przeniesione do ShadowProperty
+
+        public ProductDetails? Details { get; set; }
+
     }
 }
