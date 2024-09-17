@@ -22,35 +22,33 @@ using (var context = new Context(configurationOptions))
     context.Database.Migrate();
 }
 
-Transactions(configurationOptions, false);
-
 using (var context = new Context(configurationOptions))
 {
-    var order = context.Set<Order>().Skip(2).First();
 
-    var point = new Point(50, 19) { SRID = 4326 };
+    var person = new Person() { Name = "Ewa", Address = new Address() { City = "Katowice", Street = "Krakowska", Number = 19, Coordinates = new Models.Coordinates { Longitude = 50, Latitude = 19 } } };
+    context.Add(person);
 
-    var distance = point.Distance(order.DeliveryPoint);
+    person = new Person() { Name = "Adam", Address = new Address() { City = "Kraków", Street = "Katowicka", Number = 91, Coordinates = new Models.Coordinates { Longitude = 51, Latitude = 20 } } };
+    context.Add(person);
 
-    var intersect = point.Intersects(order.DeliveryPoint);
+    context.SaveChanges();
 
-    var polygon = new Polygon(new LinearRing(new Coordinate[] { new Coordinate(50, 19),
-                                                                new Coordinate(49, 20),
-                                                                new Coordinate(50, 21),
-                                                                new Coordinate(51, 20),
-                                                                new Coordinate(50, 19)}))
-    { SRID = 4326};
+    context.ChangeTracker.Clear();
 
-    intersect = polygon.Intersects(order.DeliveryPoint);
+    person = context.Set<Person>().Where(x => x.Address.Coordinates.Latitude == 20).FirstOrDefault();
+    person.Address.Number = 22;
+    context.SaveChanges();
 
 }
+
+
 
     using (var context = new Context(configurationOptions))
 {
     var view = context.Set<OrderSummary>().Where(x => x.Id > 2).ToList();
 }
 
-    static void ChangeTracker(DbContextOptions<Context> configurationOptions)
+static void ChangeTracker(DbContextOptions<Context> configurationOptions)
 {
     var order = new Order();
     var product = new Product() { Name = "marchewka", Price = 15 };
@@ -470,5 +468,31 @@ static void StoredProcedures(DbContextOptions<Context> configurationOptions)
         context.Database.ExecuteSqlInterpolated($"EXEC ChangePrice {multilpier}");
 
         var result = context.Set<OrderSummary>().FromSqlInterpolated($"EXEC OrderSummary {1}").ToList();
+    }
+}
+
+static void NetTopologySuite(DbContextOptions<Context> configurationOptions)
+{
+    Transactions(configurationOptions, false);
+
+    using (var context = new Context(configurationOptions))
+    {
+        var order = context.Set<Order>().Skip(2).First();
+
+        var point = new Point(50, 19) { SRID = 4326 };
+
+        var distance = point.Distance(order.DeliveryPoint);
+
+        var intersect = point.Intersects(order.DeliveryPoint);
+
+        var polygon = new Polygon(new LinearRing(new Coordinate[] { new Coordinate(50, 19),
+                                                                new Coordinate(49, 20),
+                                                                new Coordinate(50, 21),
+                                                                new Coordinate(51, 20),
+                                                                new Coordinate(50, 19)}))
+        { SRID = 4326 };
+
+        intersect = polygon.Intersects(order.DeliveryPoint);
+
     }
 }

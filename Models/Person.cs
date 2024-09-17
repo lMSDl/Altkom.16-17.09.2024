@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace Models
 {
-    public class Person
+    public class Person : Entity
     {
-        public int Key { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
+
+        public Address? Address { get; set; }
     }
 }

@@ -22,6 +22,11 @@ namespace DAL.Configurations
 
             builder.Property(x => x.Description).IsSparse();
 
+            builder.OwnsOne(x => x.Address, ownedNavigationBuilder =>
+            {
+                ownedNavigationBuilder.ToJson();
+                ownedNavigationBuilder.OwnsOne(x => x.Coordinates);
+            });
         }
     }
 }
