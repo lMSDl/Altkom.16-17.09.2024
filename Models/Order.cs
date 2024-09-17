@@ -29,8 +29,9 @@ namespace Models
         }
         public ICollection<Product> Products { get; set; } = new ObservableCollection<Product>();
 
-
         public string? Description { get; }
+        public OrderType OrderType { get; set; }
+        public Parameters Parameters { get; set; }
     }
 
 

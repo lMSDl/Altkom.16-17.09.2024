@@ -1,4 +1,5 @@
 ﻿using DAL.Conventions;
+using DAL.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
@@ -42,6 +43,12 @@ namespace DAL
                     ((IMutableEntityType)x.DeclaringType).SetPrimaryKey(x);
                 });
 
+            modelBuilder.Model.GetEntityTypes()
+                .SelectMany(x => x.GetProperties())
+                .Where(x => x.ClrType == typeof(string))
+                .Where(x => x.PropertyInfo?.CanWrite ?? false)
+                .ToList()
+                .ForEach(x => x.SetValueConverter(new ObfuscationConverter()));
         }
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
