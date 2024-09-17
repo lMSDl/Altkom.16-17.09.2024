@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.IdentityModel.Protocols;
+using NetTopologySuite.Geometries;
 using Models;
 using System.Diagnostics;
 
 var configurationOptions = new DbContextOptionsBuilder<Context>()
-    .UseSqlServer(@"Server=(local);Database=EfCore;Integrated security=true;TrustServerCertificate=true")
+    .UseSqlServer(@"Server=(local);Database=EfCore;Integrated security=true;TrustServerCertificate=true",
+    x => x.UseNetTopologySuite())
     .LogTo(Console.WriteLine)
     //.UseChangeTrackingProxies()
     //.UseLazyLoadingProxies()
@@ -23,6 +25,27 @@ using (var context = new Context(configurationOptions))
 Transactions(configurationOptions, false);
 
 using (var context = new Context(configurationOptions))
+{
+    var order = context.Set<Order>().Skip(2).First();
+
+    var point = new Point(50, 19) { SRID = 4326 };
+
+    var distance = point.Distance(order.DeliveryPoint);
+
+    var intersect = point.Intersects(order.DeliveryPoint);
+
+    var polygon = new Polygon(new LinearRing(new Coordinate[] { new Coordinate(50, 19),
+                                                                new Coordinate(49, 20),
+                                                                new Coordinate(50, 21),
+                                                                new Coordinate(51, 20),
+                                                                new Coordinate(50, 19)}))
+    { SRID = 4326};
+
+    intersect = polygon.Intersects(order.DeliveryPoint);
+
+}
+
+    using (var context = new Context(configurationOptions))
 {
     var view = context.Set<OrderSummary>().Where(x => x.Id > 2).ToList();
 }
@@ -263,7 +286,8 @@ static void Transactions(DbContextOptions<Context> configurationOptions, bool ra
             Name = x.ToString(),
             DateTime = DateTime.Now.AddMinutes(-1.23f * x),
             OrderType = (OrderType)(x % 3),
-            Parameters = (Parameters)(x % 16)
+            Parameters = (Parameters)(x % 16),
+            DeliveryPoint = new Point(50 + 0.1 * x, 19 + 0.1 * x) { SRID = 4326 }
         }).ToList();
 
         using (var transaction = context.Database.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted))

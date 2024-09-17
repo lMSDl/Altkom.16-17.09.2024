@@ -27,7 +27,7 @@ namespace DAL
             base.OnConfiguring(optionsBuilder);
 
             if (!optionsBuilder.IsConfigured)
-                optionsBuilder.UseSqlServer();
+                optionsBuilder.UseSqlServer(x => x.UseNetTopologySuite());
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
