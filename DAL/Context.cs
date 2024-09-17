@@ -43,7 +43,7 @@ namespace DAL
             configurationBuilder.Conventions.Add(_ => new DateTimeConvention());
             configurationBuilder.Conventions.Add(_ => new PluralizeTableNameConvention());
 
-            configurationBuilder.Conventions.Remove(typeof(KeyDiscoveryConvention));
+            //configurationBuilder.Conventions.Remove(typeof(KeyDiscoveryConvention));
         }
 
         public bool RandomFail { get; set; }
