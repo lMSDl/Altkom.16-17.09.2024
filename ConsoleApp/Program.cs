@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.IdentityModel.Protocols;
 using Models;
+using System.Diagnostics;
 
 var configurationOptions = new DbContextOptionsBuilder<Context>()
     .UseSqlServer(@"Server=(local);Database=EfCore;Integrated security=true;TrustServerCertificate=true")
@@ -19,41 +20,54 @@ using (var context = new Context(configurationOptions))
     context.Database.EnsureCreated();
 }
 
-var person = new Person { Name = "Ewa" };
+Transactions(configurationOptions, false);
+using (var context = new Context(configurationOptions))
+{
+    var timer = new Stopwatch();
+    timer.Reset();
+    timer.Start();
+    var orders = context.Set<Order>().Include(x => x.Products).Where(x => x.DateTime > DateTime.Now.AddMinutes(-5))
+        .Where(x => x.DateTime < DateTime.Now.AddMinutes(-1)).ToList();
+    timer.Stop();
+
+    Console.WriteLine(timer.ElapsedTicks);
+}
+    Console.WriteLine("--------------------");
 
 using (var context = new Context(configurationOptions))
 {
-    context.Add(person);
-    context.SaveChanges();
+    var timer = new Stopwatch();
+    timer.Start();
+    var orders = context.Set<Order>().Include(x => x.Products).Where(x => x.DateTime > DateTime.Now.AddMinutes(-5))
+        .Where(x => x.DateTime < DateTime.Now.AddMinutes(0)).ToList();
+    timer.Stop();
 
-    Thread.Sleep(1000);
+    Console.WriteLine(timer.ElapsedTicks);
+}
+    Console.WriteLine("--------------------");
 
-    person.Name = "Ala";
-    context.SaveChanges();
+using (var context = new Context(configurationOptions))
+{
+    var timer = new Stopwatch();
+    timer.Reset();
+    timer.Start();
+    var orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now.AddMinutes(-1)).ToList();
+    timer.Stop();
 
-    Thread.Sleep(1000);
+    Console.WriteLine(timer.ElapsedTicks);
+}
 
-    person.Name = "Adam";
-    context.SaveChanges();
+    Console.WriteLine("--------------------");
 
-    Thread.Sleep(1000);
+using (var context = new Context(configurationOptions))
+{
+    var timer = new Stopwatch();
+    timer.Reset();
+    timer.Start();
+    var orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now.AddMinutes(0)).ToList();
+    timer.Stop();
 
-    person.Name = "Wojciech";
-    context.SaveChanges();
-
-    context.ChangeTracker.Clear();
-
-    person = context.Set<Person>().First();
-    var people = context.Set<Person>().ToList();
-
-    people = context.Set<Person>().TemporalAll().ToList();
-
-    var data =  context.Set<Person>().TemporalAll()
-        .Select(x => new { x, FROM = EF.Property<DateTime>(x, "From"), TO = EF.Property<DateTime>(x, "To") }).ToList();
-
-    people = context.Set<Person>().TemporalAsOf(DateTime.UtcNow.AddSeconds(-2)).ToList();
-
-    people = context.Set<Person>().TemporalBetween(DateTime.UtcNow.AddSeconds(-4), DateTime.UtcNow.AddSeconds(-2)).ToList();
+    Console.WriteLine(timer.ElapsedTicks);
 }
 
 
@@ -362,5 +376,45 @@ static void LoadingData(DbContextOptions<Context> configurationOptions)
         //Lazy loading
         if (product.Order != null)
             Console.WriteLine();
+    }
+}
+
+static void TemporalTable(DbContextOptions<Context> configurationOptions)
+{
+    var person = new Person { Name = "Ewa" };
+
+    using (var context = new Context(configurationOptions))
+    {
+        context.Add(person);
+        context.SaveChanges();
+
+        Thread.Sleep(1000);
+
+        person.Name = "Ala";
+        context.SaveChanges();
+
+        Thread.Sleep(1000);
+
+        person.Name = "Adam";
+        context.SaveChanges();
+
+        Thread.Sleep(1000);
+
+        person.Name = "Wojciech";
+        context.SaveChanges();
+
+        context.ChangeTracker.Clear();
+
+        person = context.Set<Person>().First();
+        var people = context.Set<Person>().ToList();
+
+        people = context.Set<Person>().TemporalAll().ToList();
+
+        var data = context.Set<Person>().TemporalAll()
+            .Select(x => new { x, FROM = EF.Property<DateTime>(x, "From"), TO = EF.Property<DateTime>(x, "To") }).ToList();
+
+        people = context.Set<Person>().TemporalAsOf(DateTime.UtcNow.AddSeconds(-2)).ToList();
+
+        people = context.Set<Person>().TemporalBetween(DateTime.UtcNow.AddSeconds(-4), DateTime.UtcNow.AddSeconds(-2)).ToList();
     }
 }
