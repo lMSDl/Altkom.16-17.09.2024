@@ -124,4 +124,10 @@
   <data name="OrderSummary_DOWN" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\OrderSummary_DOWN.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="OrderSummaryView_DOWN" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\OrderSummaryView_DOWN.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="OrderSummaryView_UP" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\OrderSummaryView_UP.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
 </root>

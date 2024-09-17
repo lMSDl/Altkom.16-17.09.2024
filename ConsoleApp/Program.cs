@@ -24,14 +24,8 @@ Transactions(configurationOptions, false);
 
 using (var context = new Context(configurationOptions))
 {
-
-    var multilpier = "-1.1";
-    context.Database.ExecuteSqlRaw("EXEC ChangePrice @p0", multilpier);
-    context.Database.ExecuteSqlInterpolated($"EXEC ChangePrice {multilpier}");
-
-    var result = context.Set<OrderSummary>().FromSqlInterpolated($"EXEC OrderSummary {1}").ToList();
+    var view = context.Set<OrderSummary>().Where(x => x.Id > 2).ToList();
 }
-
 
     static void ChangeTracker(DbContextOptions<Context> configurationOptions)
 {
@@ -437,5 +431,20 @@ static void CompileQuery(DbContextOptions<Context> configurationOptions)
         timer.Stop();
 
         Console.WriteLine(timer.ElapsedTicks);
+    }
+}
+
+static void StoredProcedures(DbContextOptions<Context> configurationOptions)
+{
+    Transactions(configurationOptions, false);
+
+    using (var context = new Context(configurationOptions))
+    {
+
+        var multilpier = "-1.1";
+        context.Database.ExecuteSqlRaw("EXEC ChangePrice @p0", multilpier);
+        context.Database.ExecuteSqlInterpolated($"EXEC ChangePrice {multilpier}");
+
+        var result = context.Set<OrderSummary>().FromSqlInterpolated($"EXEC OrderSummary {1}").ToList();
     }
 }
