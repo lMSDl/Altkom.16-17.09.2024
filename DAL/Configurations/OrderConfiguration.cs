@@ -16,6 +16,10 @@ namespace DAL.Configurations
             base.Configure(builder);
 
             builder.Property(x => x.DateTime).IsConcurrencyToken();
+
+            //builder.Property(x => x.Description).HasComputedColumnSql("Cast([DateTime] as varchar(250)) + ': ' + [Name]");
+            builder.Property(x => x.Description).HasComputedColumnSql("[Name] + ' alamakota'", stored: true);
+            builder.Property<string>("Timer").HasComputedColumnSql("Cast(getdate() as varchar(250))");
         }
     }
 }
