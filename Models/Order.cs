@@ -6,6 +6,7 @@ namespace Models
     public class Order : Entity
     {
         private DateTime dateTime;
+        private string? alamakota;
 
         //odpowiednik IsConcurencyToken w konfiguracji
         //[ConcurrencyCheck]
@@ -18,7 +19,14 @@ namespace Models
                 OnPropertyChanged();
             }
         }
-        public string? Name { get; set; }
+        public string? Name
+        {
+            get => alamakota;
+            set
+            {
+                alamakota = value;
+            }
+        }
         public ICollection<Product> Products { get; set; } = new ObservableCollection<Product>();
 
 

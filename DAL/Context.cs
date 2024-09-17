@@ -23,6 +23,8 @@ namespace DAL
         {
             base.OnModelCreating(modelBuilder);
 
+            //modelBuilder.UsePropertyAccessMode(PropertyAccessMode.PreferProperty);
+
             modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
 
 

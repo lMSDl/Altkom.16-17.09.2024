@@ -302,7 +302,7 @@ static void Transactions(DbContextOptions<Context> configurationOptions, bool ra
     {
         context.RandomFail = randomFail;
         var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x }).ToList();
-        var orders = Enumerable.Range(0, 5).Select(x => new Order { DateTime = DateTime.Now.AddMinutes(-1.23f * x) }).ToList();
+        var orders = Enumerable.Range(0, 5).Select(x => new Order {Name = x.ToString(), DateTime = DateTime.Now.AddMinutes(-1.23f * x) }).ToList();
 
         using (var transaction = context.Database.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted))
         {
