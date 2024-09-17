@@ -17,57 +17,19 @@ var configurationOptions = new DbContextOptionsBuilder<Context>()
 using (var context = new Context(configurationOptions))
 {
     context.Database.EnsureDeleted();
-    context.Database.EnsureCreated();
+    context.Database.Migrate();
 }
 
 Transactions(configurationOptions, false);
-using (var context = new Context(configurationOptions))
-{
-    var timer = new Stopwatch();
-    timer.Reset();
-    timer.Start();
-    var orders = context.Set<Order>().Include(x => x.Products).ThenInclude(x => x.Details).Where(x => x.DateTime > DateTime.Now.AddMinutes(-5))
-        .Where(x => x.DateTime < DateTime.Now.AddMinutes(-1)).ToList();
-    timer.Stop();
-
-    Console.WriteLine(timer.ElapsedTicks);
-}
-    Console.WriteLine("--------------------");
 
 using (var context = new Context(configurationOptions))
 {
-    var timer = new Stopwatch();
-    timer.Start();
-    var orders = context.Set<Order>().Include(x => x.Products).Where(x => x.DateTime > DateTime.Now.AddMinutes(-5))
-        .Where(x => x.DateTime < DateTime.Now.AddMinutes(0)).ToList();
-    timer.Stop();
 
-    Console.WriteLine(timer.ElapsedTicks);
-}
-    Console.WriteLine("--------------------");
+    var multilpier = "-1.1";
+    context.Database.ExecuteSqlRaw("EXEC ChangePrice @p0", multilpier);
+    context.Database.ExecuteSqlInterpolated($"EXEC ChangePrice {multilpier}");
 
-using (var context = new Context(configurationOptions))
-{
-    var timer = new Stopwatch();
-    timer.Reset();
-    timer.Start();
-    var orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now.AddMinutes(-1)).ToList();
-    timer.Stop();
-
-    Console.WriteLine(timer.ElapsedTicks);
-}
-
-    Console.WriteLine("--------------------");
-
-using (var context = new Context(configurationOptions))
-{
-    var timer = new Stopwatch();
-    timer.Reset();
-    timer.Start();
-    var orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now.AddMinutes(0)).ToList();
-    timer.Stop();
-
-    Console.WriteLine(timer.ElapsedTicks);
+    var result = context.Set<OrderSummary>().FromSqlInterpolated($"EXEC OrderSummary {1}").ToList();
 }
 
 
@@ -302,9 +264,13 @@ static void Transactions(DbContextOptions<Context> configurationOptions, bool ra
     {
         context.RandomFail = randomFail;
         var products = Enumerable.Range(100, 50).Select(x => new Product { Name = $"Product {x}", Price = 1.23f * x, Details = new ProductDetails { Height = x, Width = 2 * x, Weight = 3 * x } }).ToList();
-        var orders = Enumerable.Range(0, 5).Select(x => new Order { Name = x.ToString(), DateTime = DateTime.Now.AddMinutes(-1.23f * x),
+        var orders = Enumerable.Range(0, 5).Select(x => new Order
+        {
+            Name = x.ToString(),
+            DateTime = DateTime.Now.AddMinutes(-1.23f * x),
             OrderType = (OrderType)(x % 3),
-        Parameters = (Parameters) (x % 16)}).ToList();
+            Parameters = (Parameters)(x % 16)
+        }).ToList();
 
         using (var transaction = context.Database.BeginTransaction(System.Data.IsolationLevel.ReadUncommitted))
         {
@@ -418,5 +384,58 @@ static void TemporalTable(DbContextOptions<Context> configurationOptions)
         people = context.Set<Person>().TemporalAsOf(DateTime.UtcNow.AddSeconds(-2)).ToList();
 
         people = context.Set<Person>().TemporalBetween(DateTime.UtcNow.AddSeconds(-4), DateTime.UtcNow.AddSeconds(-2)).ToList();
+    }
+}
+
+static void CompileQuery(DbContextOptions<Context> configurationOptions)
+{
+    Transactions(configurationOptions, false);
+    using (var context = new Context(configurationOptions))
+    {
+        var timer = new Stopwatch();
+        timer.Reset();
+        timer.Start();
+        var orders = context.Set<Order>().Include(x => x.Products).ThenInclude(x => x.Details).Where(x => x.DateTime > DateTime.Now.AddMinutes(-5))
+            .Where(x => x.DateTime < DateTime.Now.AddMinutes(-1)).ToList();
+        timer.Stop();
+
+        Console.WriteLine(timer.ElapsedTicks);
+    }
+    Console.WriteLine("--------------------");
+
+    using (var context = new Context(configurationOptions))
+    {
+        var timer = new Stopwatch();
+        timer.Start();
+        var orders = context.Set<Order>().Include(x => x.Products).Where(x => x.DateTime > DateTime.Now.AddMinutes(-5))
+            .Where(x => x.DateTime < DateTime.Now.AddMinutes(0)).ToList();
+        timer.Stop();
+
+        Console.WriteLine(timer.ElapsedTicks);
+    }
+    Console.WriteLine("--------------------");
+
+    using (var context = new Context(configurationOptions))
+    {
+        var timer = new Stopwatch();
+        timer.Reset();
+        timer.Start();
+        var orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now.AddMinutes(-1)).ToList();
+        timer.Stop();
+
+        Console.WriteLine(timer.ElapsedTicks);
+    }
+
+    Console.WriteLine("--------------------");
+
+    using (var context = new Context(configurationOptions))
+    {
+        var timer = new Stopwatch();
+        timer.Reset();
+        timer.Start();
+        var orders = Context.GetOrdersByDateRange(context, DateTime.Now.AddMinutes(-5), DateTime.Now.AddMinutes(0)).ToList();
+        timer.Stop();
+
+        Console.WriteLine(timer.ElapsedTicks);
     }
 }
